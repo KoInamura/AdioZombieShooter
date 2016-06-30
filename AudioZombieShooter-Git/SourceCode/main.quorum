@@ -1,0 +1,119 @@
+use Libraries.Game.Game
+use Libraries.Sound.Audio
+use Libraries.Game.InputMonitor
+use Libraries.Interface.Events.KeyboardEvent
+use Libraries.Compute.Random
+
+
+class Main is Game
+InputMonitor iMonitor
+KeyboardEvent key
+
+Audio aud
+Audio laugh
+Audio beep
+Audio comedy
+Audio hurray
+
+Random ran
+
+integer killCounter = 0
+boolean plusMinus = true
+number randomBalance = 0
+    /*
+        This action, Main, starts our computer program. In Quorum, programs always
+        begin from Main.
+    */
+    action Main
+        say "Welcome to my audio shooting game. When you start the game, you will hear the music coming from somewhere far ahead of you. The music represents a zombie coming to get you. The goal of the game is to shoot the zombie with your own sound beam before they get to you. The music will sound louder and louder as the zombie comes close. Once they reach you they will make a hideous laughing sound, then you lose the game. The zombies could come from your right side or left side. What you can do is to turn youself by pressing right arrow or left arrow to face the zombie straight ahead, then press the space key to emmit the sound beam toward zombie. If your aim is accurate, the zombie will make a giggling sound and disappear. There will be five zombies coming toward you one after another, each from different direction. If you can make all five zombies to disappear, you will win the game."
+ 
+        StartGame()
+    end
+
+   
+    action CreateGame
+    aud:Load("song.ogg")
+    aud:SetBalance(0.8)
+    aud:SetVolume(0.001)
+    aud:Play()
+     
+    laugh:Load("Goofy Laugh.wav")
+    laugh:SetBalance(0)
+    laugh:SetVolume(1)
+
+    beep:Load("beep.wav")
+    beep:SetBalance(0)
+    beep:SetVolume(0.3)
+
+    comedy:Load("Commedy.wav")
+    comedy:SetBalance(0)
+    comedy:SetVolume(1)
+    
+    hurray:Load("Hurray.wav")
+    hurray:SetBalance(0)
+    hurray:SetVolume(1)
+    end
+
+    
+    action Update(number seconds)
+    number currentV = aud:GetVolume()
+    number currentB = aud:GetBalance()
+    
+        if killCounter < 5
+            if currentV > 1
+            aud:SetVolume(1.0)
+            end
+
+            if currentV >= 1
+            aud:Stop()
+            laugh:PlayUntilDone()
+            say "You lost the game"
+            Exit()
+            end
+
+            if iMonitor:IsKeyPressed(key:RIGHT)
+                number newB = currentB- 0.1
+                aud:SetVolume(currentV + 0.001)
+                    if newB > 1.0
+                    newB =1.0
+                    end
+                aud:SetBalance(newB)
+            elseif iMonitor:IsKeyPressed(key:LEFT)
+                number newB = currentB+ 0.1
+                aud:SetVolume(currentV + 0.001)
+                    if newB < -1.0
+                    newB = -1.0
+                    end
+                aud:SetBalance(newB)
+            else
+                aud:SetVolume(currentV + 0.001)
+                aud:SetBalance(currentB)
+            end 
+
+            if iMonitor:IsKeyPressed(key:SPACE)
+            beep:Play()
+
+                if currentB > -0.1 and currentB < 0.1
+                aud:Stop()
+                comedy:PlayUntilDone()
+                killCounter = killCounter +1
+                NewRapCreater()
+                aud:SetBalance(randomBalance)
+                aud:SetVolume(0.01)
+                aud:Play()
+                end
+            end
+        
+        elseif killCounter >= 5
+        hurray:PlayUntilDone()
+        say "You beat all zombies, and you won the game!"
+        Exit()
+        end
+    end
+    
+    action NewRapCreater
+        integer base = ran:RandomIntegerBetween(-10, 10)
+        number baseNumber = cast(number, base)
+        randomBalance = baseNumber/10
+    end
+end
